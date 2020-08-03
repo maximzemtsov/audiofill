@@ -1,16 +1,8 @@
-# audiofill
+# AudioFill
 
-A new Flutter project.
+Проект создания визуализации для платформы Android TV
 
-## Getting Started
+## Начальные фичи
+Перечень функций реализованных в проекте
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Отображение уровня звукового шума в виде циферок и графика на экране

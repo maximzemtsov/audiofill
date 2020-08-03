@@ -1,5 +1,5 @@
 name: audiofill
-description: A new Flutter project.
+description: AndroidTV audio filling from microphone
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -23,11 +23,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^0.12.1   #доступ к апихам
+  transparent_image: ^1.0.0 #поддержка альфаканала у изображений
+  provider: ^4.2.0  #поддержка провайдера
+  google_fonts: ^1.1.0  #шрифтовые темы
+  flutter_cache_manager: ^1.4.1 #кэш
+  flutter_cache_store: ^0.7.2 #кэш
+  intl: ^0.16.1 #работа с датами
 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.3
+  # cupertino_icons: ^0.1.3
 
 dev_dependencies:
   flutter_test:
