@@ -31,7 +31,6 @@ dependencies:
   flutter_cache_store: ^0.7.2 #кэш
   intl: ^0.16.1 #работа с датами
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   # cupertino_icons: ^0.1.3
