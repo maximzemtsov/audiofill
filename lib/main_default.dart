@@ -9,8 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Shortcuts(
         shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.select):
-              const Intent(ActivateAction.key)
+          LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
         },
         child: MaterialApp(
           title: "Test Audio",

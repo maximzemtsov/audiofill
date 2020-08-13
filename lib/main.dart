@@ -1,7 +1,6 @@
 import 'package:audiofill/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 void main() => runApp(Main());
 
@@ -10,15 +9,10 @@ class Main extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shortcuts(
       shortcuts: {
-        LogicalKeySet(LogicalKeyboardKey.select):
-            const Intent(ActivateAction.key)
+        LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
       },
       child: MaterialApp(
-        theme: ThemeData(
-          primarySwatch: Colors.indigo,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-          fontFamily: GoogleFonts.mina().fontFamily,
-        ),
+        debugShowCheckedModeBanner: false,
         initialRoute: '/',
         routes: {
           '/': routeHomeScreen,
