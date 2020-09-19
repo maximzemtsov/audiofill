@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import 'arrow_indicator.dart';
-import 'digit.dart';
+import 'package:provider/provider.dart';
+import '../model/signalModel.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -33,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               "Визуализация музыкального окружения",
               style: TextStyle(
-                  fontFamily: GoogleFonts.openSans().fontFamily,
+                  fontFamily: 'Mina',
                   fontSize: 28,
                   color: Color(0xffffca3a),
-                  fontWeight: FontWeight.w100),
+                  fontWeight: FontWeight.normal),
             ),
           ),
           actions: [
@@ -57,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ),
-        body: Container(child: corouselView()),
+        body: Container(child: corouselView(context)),
       ),
     );
   }
@@ -83,10 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Text('Настройки приложения',
                       style: TextStyle(
-                          fontFamily: GoogleFonts.openSans().fontFamily,
+                          fontFamily: 'Mina',
                           fontSize: 28,
                           color: Color(0xffffca3a),
-                          fontWeight: FontWeight.w600)),
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
               decoration: BoxDecoration(
@@ -96,10 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               title: Text('Канал захвата звука',
                   style: TextStyle(
-                      fontFamily: GoogleFonts.openSans().fontFamily,
+                      fontFamily: 'Mina',
                       fontSize: 28,
                       color: Color(0xffffca3a),
-                      fontWeight: FontWeight.w100)),
+                      fontWeight: FontWeight.normal)),
               onTap: () {
                 // Update the state of the app.
                 // ...
@@ -108,10 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               title: Text('Устройство захвата звука',
                   style: TextStyle(
-                      fontFamily: GoogleFonts.openSans().fontFamily,
+                      fontFamily: 'Mina',
                       fontSize: 28,
                       color: Color(0xffffca3a),
-                      fontWeight: FontWeight.w100)),
+                      fontWeight: FontWeight.normal)),
               onTap: () {
                 // Update the state of the app.
                 // ...
@@ -123,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget corouselView() {
+  Widget corouselView(BuildContext context) {
     final List<String> imgList = [
       'assets/images/cover_0.png',
       'assets/images/cover_1.png',
@@ -141,16 +139,16 @@ class _HomeScreenState extends State<HomeScreen> {
         Cover(
             item: [imgList[0], "Цифровой индикатор"],
             onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Digit()));
+              Navigator.pushNamed(context, '/digit')
+                  .then((value) => Provider.of<SignalModel>(context).stop);
             }),
         Cover(
             item: [imgList[1], "Стрелочный индикатор"],
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => ArrowIndicator()));
+              Navigator.pushNamed(context, '/arrow')
+                  .then((value) => Provider.of<SignalModel>(context).stop);
             }),
-        /*       Cover(
+        /*  Cover(
             item: [imgList[2], imgList[0]],
             onTap: () {
               Navigator.push(
@@ -241,22 +239,6 @@ class _CoverState extends State<Cover> with SingleTickerProviderStateMixin {
     }
   }
 
-  // void _openDetails() {
-  //   Navigator.push(context, MaterialPageRoute(builder: (context) => DetailPage(widget.item)));
-  // }
-
-  // bool _onKey(FocusNode node, RawKeyEvent event) {
-  //   if(event is RawKeyDownEvent) {
-  //     if(event.logicalKey == LogicalKeyboardKey.select || event.logicalKey == LogicalKeyboardKey.enter) {
-  //       _onTap();
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   }
-  //   return false;
-  // }
-
   @override
   Widget build(BuildContext context) {
     return RawMaterialButton(
@@ -266,16 +248,6 @@ class _CoverState extends State<Cover> with SingleTickerProviderStateMixin {
       focusElevation: 0,
       child: buildCover(context),
     );
-
-    // return Focus(
-    //     focusNode: _node,
-    //     onKey: _onKey,
-    //     child: Builder(
-    //       builder: (context) {
-    //         return buildCover(context);
-    //       }
-    //     ),
-    // );
   }
 
   Widget buildCover(BuildContext context) {

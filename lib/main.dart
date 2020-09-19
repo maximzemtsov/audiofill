@@ -1,10 +1,21 @@
-import 'package:audiofill/home_screen.dart';
+import 'model/signalModel.dart';
+import 'screens/arrowIndicatorScreen.dart';
+import 'screens/digitIndicatorScreen.dart';
+import 'screens/homeScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
-void main() => runApp(Main());
+void main() => runApp(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SignalModel()),
+      ],
+      child: Main(),
+    ));
 
 class Main extends StatelessWidget {
+  const Main({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Shortcuts(
@@ -16,6 +27,8 @@ class Main extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': routeHomeScreen,
+          '/arrow': routeArrowIndicatorScreen,
+          '/digit': routeDigitIndicatorScreen,
         },
       ),
     );
@@ -27,12 +40,15 @@ class Main extends StatelessWidget {
   }
 
   /// Переход на экран анимации уровня звукового окружения
-  Widget routeIndicate(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Details Animation"),
-      ),
-      body: Text("Text animation))"),
-    );
+  Widget routeArrowIndicatorScreen(BuildContext context) {
+    //Наверное стоит тут включить Provider
+    Provider.of<SignalModel>(context).start();
+    return ArrowIndicatorScreen();
+  }
+
+  Widget routeDigitIndicatorScreen(BuildContext context) {
+    //Наверное стоит тут включить Provider
+    Provider.of<SignalModel>(context).start();
+    return DigitIndicatorScreen();
   }
 }

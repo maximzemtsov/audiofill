@@ -1,124 +1,99 @@
 package com.example.audiofill
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import kotlin.math.abs
+import kotlin.math.log
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "audiofill/audiorecord";
-    private var beginCount = 10;
+    private val CHANNEL = "8t61YpeA5stzji20ibgyRUSbt29LWH56ea0VZdk5lxoaUzGwoMKfiSdVyAaD";
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         configureAudioSignal();
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "getAudioSignal") {
-                val res = getAudioSignal()
+            if (checkPermission())
+                if (call.method == "getSignalLevel") {
+                    val res = getSignalLevel();
 
-                if (res is String) {
-                    result.success(res)
+                    if (res is Double) {
+                        result.success(res)
+                    } else {
+                        result.error("ERROR", "Не верный тип выходных данных.", null)
+                    }
                 } else {
-                    result.error("ERROR", "Не верный тип выходных данных.", null)
+                    result.notImplemented()
                 }
-            } else {
-                result.notImplemented()
-            }
         }
     }
 
     private fun getPermission() {
-         if(! checkPermission()){
+        if (!checkPermission()) {
             val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
             ActivityCompat.requestPermissions(this, permissions, 0)
         }
     }
 
-    private fun checkPermission(): Boolean
-    {
+    private fun checkPermission(): Boolean {
         return (ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
     }
 
     private fun configureAudioSignal(): Boolean {
         getPermission()
-        beginCount = 7;
         return true;
     }
 
-
+    //private var record: AudioRecord? = null
     private val sampleRate = 44100
     private var bufferSize = 6400 * 2; /// Magical number!
     private val maxAmplitude = 32767 // same as 2^15
-    /// Variables (i.e. will change value)
-    private var eventSink: EventChannel.EventSink? = null
-    private var recording = false
 
-    /**
-     * Starts recording and streaming audio data from the mic.
-     * Uses a buffer array of size 512. Whenever buffer is full, the content is sent to Flutter.
-     *
-     *
-     * Source:
-     * https://www.newventuresoftware.com/blog/record-play-and-visualize-raw-audio-data-in-android
-     */
-    @SuppressLint("NewApi")
-    private fun streamMicData() {
-        //Thread(Runnable {
-        //    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO)
-
-            val audioBuffer = ShortArray(bufferSize / 2)
-            val record = AudioRecord(
-                    MediaRecorder.AudioSource.DEFAULT,
-                    sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize)
-            if (record.state != AudioRecord.STATE_INITIALIZED) {
-                Log.e(null, "Аудио устройстройство захвата звука неактивно")
-                //return@Runnable
-            }
-            /** Start recording loop  */
-            record.startRecording()
-            recording = true
-            while (recording) {
-                /** Read data into buffer  */
-                record.read(audioBuffer, 0, audioBuffer.size)
-                Handler(Looper.getMainLooper()).post {
-                    /// Convert to list in order to send via EventChannel.
-                    val audioBufferList = ArrayList<Double>()
-                    for (impulse in audioBuffer) {
-                        val normalizedImpulse = impulse.toDouble() / maxAmplitude.toDouble()
-                        Log.i(null, "Impulse value:= ${normalizedImpulse}" )
-                        audioBufferList.add(normalizedImpulse)
-                    }
-                    eventSink!!.success(audioBufferList)
-                }
-
-            }
-            record.stop()
-            record.release()
-        //}).start()
-    }
-
-    private fun getAudioSignal(): String {
+    private fun getSignalLevel(): Double {
+        var record: AudioRecord? = null
         if(checkPermission())
         {
-            streamMicData()
+            val audioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
+            val channelConfig = AudioFormat.CHANNEL_IN_MONO
+            bufferSize = AudioRecord.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT)
+            val audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+            record = AudioRecord(audioSource,sampleRate,channelConfig,audioFormat,bufferSize)
+            if (record.state != AudioRecord.STATE_INITIALIZED) {
+                Log.e("OUT", "Аудио устройстройство захвата звука неактивно")
+                return 0.0
+            }
+            record.startRecording()
+            Thread.sleep(10L)
+            val audioBuffer = ShortArray(bufferSize)
+            if(record.read(audioBuffer, 0, audioBuffer.size) < 0) return 0.0
+            record.stop()
+            record.release()
+            var _out: Double = 0.0
+            var _sum: Double = 0.0
+            val _maxA: Double = (0x8000).toDouble()
+            for(tik in audioBuffer)
+                _sum += abs(tik.toDouble())
+            _out = _sum/audioBuffer.size.toDouble()
+            _out = 20.0 * log( _out/_maxA,10.0)
+            Log.i("OUT","size: ${audioBuffer.size},sum: ${_sum},min: ${audioBuffer.min()},max: ${audioBuffer.max()},ret: ${_out} ")
+            return _out
         }
-        Log.i(null, "Function AudioSignal is running")
-        return "Signal is changed ${(beginCount++)}";
+        
+        return 0.0
     }
 }
+

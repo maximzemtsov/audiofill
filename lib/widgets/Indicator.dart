@@ -1,152 +1,17 @@
-import 'dart:io';
 import 'dart:math';
 
+import 'package:audiofill/model/signalModel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_cache_store/flutter_cache_store.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:noise_meter/noise_meter.dart';
-
-class ArrowIndicator extends StatefulWidget {
-  @override
-  _ArrowIndicatorState createState() => _ArrowIndicatorState();
-}
-
-class _ArrowIndicatorState extends State<ArrowIndicator>
-    with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-
-  bool _isRecording = false;
-  StreamSubscription<NoiseReading> _noiseSubscription;
-  NoiseMeter _noiseMeter = new NoiseMeter();
-  Timer _timer = null;
-
-  void seUpAudio() async {
-    //print(" ====> Start timer!");
-    final duration = Duration(seconds: 4);
-    _timer = Timer(duration, repeatAudioSetting);
-  }
-
-  void repeatAudioSetting() {
-    //print(" ====> Start trigger restart!");
-    stop();
-    _timer.cancel();
-    sleep(Duration(milliseconds: 300));
-    start();
-  }
-
-  void onData(NoiseReading noiseReading) {
-    this.setState(() {
-      if (!this._isRecording) {
-        this._isRecording = true;
-      }
-    });
-    //*print(noiseReading.toString());*/
-    setState(() {
-      _signaldB = noiseReading.maxDecibel - 30;
-    });
-    print("${noiseReading.maxDecibel} dB");
-  }
-
-  void start() async {
-    //print(" ====> Start audio meter!");
-    try {
-      _noiseSubscription = _noiseMeter.noiseStream.listen(onData);
-      seUpAudio();
-    } catch (err) {
-      print(err);
-    }
-  }
-
-  void stop() async {
-    try {
-      if (_noiseSubscription != null) {
-        _noiseSubscription.cancel();
-        _noiseSubscription = null;
-      }
-      this.setState(() {
-        this._isRecording = false;
-      });
-    } catch (err) {
-      print('stopRecorder error: $err');
-    }
-  }
-
-  @override
-  void initState() {
-    _controller = AnimationController(vsync: this);
-    super.initState();
-    start();
-  }
-
-  @override
-  void dispose() {
-    stop();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Shortcuts(
-      shortcuts: {
-        LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
-      },
-      child: Scaffold(
-        body: _arrowIndicator(context, _signaldB),
-      ),
-    );
-  }
-
-  final double maxSignaldB = 400;
-  double _signaldB = 0;
-
-  void _getSignal() => setState(() {
-        _signaldB = Random().nextDouble() * maxSignaldB;
-      });
-
-  Widget _arrowIndicator(BuildContext ctx, double value) {
-    double h1 = MediaQuery.of(ctx).size.height;
-    double h13 = 1; //0.16784 * h1;
-    double h12 = h1 - h13 - 1;
-    return SizedBox(
-      height: h1,
-      width: MediaQuery.of(ctx).size.width,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Container(
-            height: 1,
-            child: null,
-            decoration: BoxDecoration(color: Colors.black, boxShadow: [
-              BoxShadow(
-                color: Colors.red,
-                offset: Offset(0, 20),
-                blurRadius: 250,
-                spreadRadius: 0,
-              )
-            ]),
-          ),
-          Container(
-            height: h12,
-            color: Colors.black,
-            child: CustomPaint(
-              painter: Indicator(value),
-              child: Container(),
-            ),
-          ),
-          Container(height: h13, color: Colors.black, child: null),
-        ],
-      ),
-    );
-  }
-}
+import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 
 class Indicator extends CustomPainter {
-  final double _value;
+  double _value;
+  BuildContext context;
 
-  Indicator(this._value);
+  Indicator({Listenable repaint, this.context}) : super(repaint: repaint) {
+    _value = context.watch<SignalModel>().signaldB;
+  }
 
   final double w1 = 1920;
   final double h1 = 853;
@@ -267,7 +132,8 @@ class Indicator extends CustomPainter {
     ///Надписи на индикаторе
     ///
 
-    TextStyle stDigit = GoogleFonts.mina(
+    TextStyle stDigit = TextStyle(
+        fontFamily: 'Mina',
         color: Color(0xffff0000),
         fontSize: pd(50),
         fontWeight: FontWeight.w400);
@@ -289,13 +155,15 @@ class Indicator extends CustomPainter {
     ///Надпись dB
 
     ///Надпись POWER
-    TextStyle stText = GoogleFonts.mina(
+    TextStyle stText = TextStyle(
+        fontFamily: 'Mina',
         color: Color(0xffff0000),
         fontSize: pd(50),
         fontWeight: FontWeight.w400);
     drawText(canvas, "dB", _lt.dx + pd(937), _lt.dy + pd(399), 0, stText);
 
-    TextStyle stTextName = GoogleFonts.mina(
+    TextStyle stTextName = TextStyle(
+        fontFamily: 'Mina',
         color: Color(0xffEAB7B7),
         fontSize: pd(50),
         fontWeight: FontWeight.w600);
@@ -308,7 +176,7 @@ class Indicator extends CustomPainter {
     double _y0 = h1 + 60;
     double _radius = 750.0;
 
-    double _delta = 0.0; //(_value * 100) % 100.0;
+    double _delta = 0; //(_value * 100) % 100.0;
     if (_value <= 1)
       _delta = _value * 42;
     else if (_value <= 5)
@@ -328,7 +196,7 @@ class Indicator extends CustomPainter {
     else
       _delta = 100;
 
-    print("${_value} db => delta = $_delta");
+    print("$_value db => delta = $_delta");
 
     //double alfa0 = (135.0 - _delta) * pi / 180.0;
 
@@ -362,5 +230,5 @@ class Indicator extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(Indicator oldDelegate) => false;
+  bool shouldRepaint(Indicator oldDelegate) => true;
 }
